@@ -221,9 +221,9 @@ select.inp{cursor:pointer;}
       <div class="section-title">Today's Ads</div>
       <div class="prog-top"><span id="e_progText">0 / 30</span><strong id="e_progPct">0%</strong></div>
       <div class="prog-bar-bg" style="margin-bottom:18px"><div class="prog-bar-fill" id="e_progBar"></div></div>
-      <div class="reward-badge">+৳0.02 per ad</div>
-      <button id="watchBtn" class="watch-btn" onclick="watchAd()">👁️ Watch Ad & Earn ৳0.02</button>
-      <div class="tip-box">💡 প্রতিদিন ৩০টি বিজ্ঞাপন দেখুন এবং সর্বোচ্চ <strong>৳0.60</strong> আয় করুন (ads থেকে)! এছাড়াও Daily Bonus ও Referral থেকে বাড়তি আয় করুন।</div>
+      <div class="reward-badge">+৳0.25 per ad</div>
+      <button id="watchBtn" class="watch-btn" onclick="watchAd()">👁️ Watch Ad & Earn ৳0.25</button>
+      <div class="tip-box">💡 প্রতিদিন ৩০টি বিজ্ঞাপন দেখুন এবং সর্বোচ্চ <strong>৳10.0</strong> আয় করুন (ads থেকে)! এছাড়াও Daily Bonus ও Referral থেকে বাড়তি আয় করুন।</div>
     </div>
 
     <div class="section-title">Extra Tasks</div>
@@ -252,7 +252,7 @@ select.inp{cursor:pointer;}
         <option value="nagad">📱 Nagad</option>
       </select>
       <input id="wd_account" class="inp" type="tel" placeholder="Account number (01XXXXXXXXX)">
-      <input id="wd_amount" class="inp" type="number" placeholder="Amount (min ৳150)">
+      <input id="wd_amount" class="inp" type="number" placeholder="Amount (min ৳500)">
       <button class="wd-btn" id="wdSubmitBtn" onclick="doWithdraw()">✅ Send Request</button>
     </div>
     <div class="section-title">Withdrawal History</div>
@@ -319,8 +319,8 @@ const db = firebase.database();
 // CONSTANTS
 // ════════════════════════════════════════
 const DAILY_LIMIT = 30;
-const REWARD = 0.02;
-const MIN_WITHDRAW = 150;
+const REWARD = 0.25;
+const MIN_WITHDRAW = 500;
 const MAX_WITHDRAW = 5000;
 const JOIN_BONUS = 5.00;
 const DAILY_BONUS = 5.00;
@@ -535,7 +535,7 @@ function updateUI(){
     btn.innerText = '✅ আজকের লিমিট শেষ — আবার আসুন কাল!';
   } else {
     btn.disabled = false;
-    btn.innerText = '👁️ Watch Ad & Earn ৳0.02';
+    btn.innerText = '👁️ Watch Ad & Earn ৳0.25';
   }
 
   // join task
@@ -569,7 +569,7 @@ function watchAd(){
       balance: newBalance,
       lastDate: todayStr()
     }).then(()=>{
-      showToast('🎉 +৳0.02 আয় হয়েছে!');
+      showToast('🎉 +৳0.25 আয় হয়েছে!');
     });
   }
 
