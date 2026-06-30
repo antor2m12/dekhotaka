@@ -319,7 +319,7 @@ const db = firebase.database();
 // CONSTANTS
 // ════════════════════════════════════════
 const DAILY_LIMIT = 30;
-const REWARD = 0.20;
+const REWARD = 0.02;
 const MIN_WITHDRAW = 150;
 const MAX_WITHDRAW = 5000;
 const JOIN_BONUS = 5.00;
@@ -519,7 +519,7 @@ function updateUI(){
     btn.innerText = '✅ আজকের লিমিট শেষ — আবার আসুন কাল!';
   } else {
     btn.disabled = false;
-    btn.innerText = '👁️ Watch Ad & Earn ৳0.20';
+    btn.innerText = '👁️ Watch Ad & Earn ৳0.02';
   }
 
   // join task
@@ -553,7 +553,7 @@ function watchAd(){
       balance: newBalance,
       lastDate: todayStr()
     }).then(()=>{
-      showToast('🎉 +৳0.20 আয় হয়েছে!');
+      showToast('🎉 +৳0.02 আয় হয়েছে!');
     });
   }
 
