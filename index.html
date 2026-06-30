@@ -223,16 +223,16 @@ select.inp{cursor:pointer;}
       <div class="prog-bar-bg" style="margin-bottom:18px"><div class="prog-bar-fill" id="e_progBar"></div></div>
       <div class="reward-badge">+৳0.02 per ad</div>
       <button id="watchBtn" class="watch-btn" onclick="watchAd()">👁️ Watch Ad & Earn ৳0.02</button>
-      <div class="tip-box">💡 প্রতিদিন ৩০টি বিজ্ঞাপন দেখুন এবং সর্বোচ্চ <strong>৳100</strong> আয় করুন!</div>
+      <div class="tip-box">💡 প্রতিদিন ৩০টি বিজ্ঞাপন দেখুন এবং সর্বোচ্চ <strong>৳0.60</strong> আয় করুন (ads থেকে)! এছাড়াও Daily Bonus ও Referral থেকে বাড়তি আয় করুন।</div>
     </div>
 
     <div class="section-title">Extra Tasks</div>
     <div class="task-card" id="joinTaskCard" style="display:none;">
-      <div class="task-info"><div class="task-icon">📢</div><div><div class="task-name">Join Telegram Channel</div><div class="task-reward">+৳2.00 বোনাস</div></div></div>
+      <div class="task-info"><div class="task-icon">📢</div><div><div class="task-name">Join Telegram Channel</div><div class="task-reward">+৳5.00 বোনাস</div></div></div>
       <button class="task-btn" id="joinTaskBtn" onclick="completeJoinTask()">Join</button>
     </div>
     <div class="task-card">
-      <div class="task-info"><div class="task-icon">🎁</div><div><div class="task-name">Daily Login Bonus</div><div class="task-reward">+৳1.00 বোনাস</div></div></div>
+      <div class="task-info"><div class="task-icon">🎁</div><div><div class="task-name">Daily Login Bonus</div><div class="task-reward">+৳5.00 বোনাস</div></div></div>
       <button class="task-btn" id="dailyTaskBtn" onclick="completeDailyTask()">Claim</button>
     </div>
   </div>
@@ -323,9 +323,10 @@ const REWARD = 0.02;
 const MIN_WITHDRAW = 150;
 const MAX_WITHDRAW = 5000;
 const JOIN_BONUS = 5.00;
-const DAILY_BONUS = 2.00;
+const DAILY_BONUS = 5.00;
 const REFERRAL_BONUS = 5.00;
-const TELEGRAM_CHANNEL = "https://t.me/dekhotaka"; // ⚠️ এখানে আপনার চ্যানেল লিংক দিন
+const FIRST_JOIN_BONUS = 10.00; // নতুন user signup করলেই এই বোনাস পাবে (welcome bonus)
+const TELEGRAM_CHANNEL = "t.me/dekhotaka"; // ⚠️ এখানে আপনার চ্যানেল লিংক দিন
 
 let currentUserId = null;
 let currentUserData = null;
@@ -400,14 +401,16 @@ function initUserFromTelegram(tgUser){
 function createNewUser(tgUser, refCode){
   const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'User';
   let refBonus = 0;
+  const welcomeBonus = FIRST_JOIN_BONUS; // সব নতুন user এই বোনাস পাবে
 
   const finalize = ()=>{
+    const totalStartBalance = welcomeBonus + refBonus;
     const newUser = {
       name: name,
       telegramId: currentUserId,
       username: tgUser.username || '',
       phone: '',
-      balance: refBonus,
+      balance: totalStartBalance,
       totalAds: 0,
       todayAds: 0,
       lastDate: todayStr(),
@@ -422,7 +425,11 @@ function createNewUser(tgUser, refCode){
     db.ref('users/'+currentUserId).set(newUser).then(()=>{
       currentUserData = newUser;
       showApp();
-      if(refBonus>0) showToast('🎉 রেফারেল বোনাস ৳'+refBonus+' পেয়েছেন!');
+      if(refBonus>0){
+        showToast('🎉 স্বাগতম বোনাস ৳'+welcomeBonus+' + রেফারেল বোনাস ৳'+refBonus+' পেয়েছেন!');
+      } else {
+        showToast('🎉 স্বাগতম বোনাস ৳'+welcomeBonus+' পেয়েছেন!');
+      }
     });
   };
 
@@ -436,11 +443,20 @@ function createNewUser(tgUser, refCode){
         db.ref('users/'+refUid).update({
           balance: parseFloat(refUser.balance||0) + REFERRAL_BONUS,
           refs: (refUser.refs||0) + 1
+        }).then(()=>{
+          console.log('Referrer bonus credited to', refUid);
+        }).catch(err=>{
+          console.error('Referrer bonus FAILED:', err.message);
         });
-        refBonus = 1.00; // new user also gets small bonus
+        refBonus = REFERRAL_BONUS; // new user also gets a referral bonus on top of welcome bonus
+      } else {
+        console.warn('Referral code not found:', refCode);
       }
       finalize();
-    }).catch(()=>finalize());
+    }).catch(err=>{
+      console.error('Referral lookup FAILED:', err.message);
+      finalize();
+    });
   } else {
     finalize();
   }
