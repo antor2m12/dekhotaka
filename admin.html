@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DekhoTaka Admin Panel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+:root{
+  --bg:#0a0015;--surface:#130025;--card:#1c0035;--border:#2e0058;
+  --pink:#ff3de0;--purple:#a020f0;--gold:#ffd166;--text:#f0e6ff;--muted:#9e7abf;
+  --green:#00e5a0;--danger:#ff4d6d;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:30px;width:100%;max-width:380px;text-align:center;}
+.login-box h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin-bottom:6px;
+  background:linear-gradient(90deg,var(--pink),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.login-box p{color:var(--muted);font-size:13px;margin-bottom:24px;}
+.login-box input{width:100%;padding:13px;background:#0d0020;border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:14px;font-size:14px;outline:none;}
+.login-box input:focus{border-color:var(--pink);}
+.login-box button{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;font-weight:700;cursor:pointer;font-size:14px;}
+.login-err{color:var(--danger);font-size:13px;margin-top:10px;display:none;}
+
+/* DASHBOARD */
+#dashboard{display:none;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;}
+.topbar h1{font-family:'Space Grotesk',sans-serif;font-size:18px;background:linear-gradient(90deg,var(--pink),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logout{background:none;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;}
+.wrap{max-width:900px;margin:auto;padding:20px;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;}
+.stat-card .num{font-size:24px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:var(--pink);}
+.stat-card .lbl{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.4px;}
+
+.tabs{display:flex;gap:8px;margin-bottom:18px;background:var(--card);border-radius:12px;padding:4px;border:1px solid var(--border);}
+.tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);}
+.tab.active{background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;}
+
+.req-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.req-info{flex:1;min-width:200px;}
+.req-name{font-weight:700;font-size:14px;}
+.req-detail{font-size:12px;color:var(--muted);margin-top:3px;}
+.req-amt{font-size:20px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:var(--gold);}
+.req-actions{display:flex;gap:8px;}
+.act-btn{padding:9px 16px;border-radius:9px;border:none;font-size:12px;font-weight:700;cursor:pointer;}
+.act-approve{background:var(--green);color:#000;}
+.act-reject{background:var(--danger);color:#fff;}
+.status-badge{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;}
+.status-badge.pending{background:#ffd16622;color:var(--gold);}
+.status-badge.approved{background:#00e5a022;color:var(--green);}
+.status-badge.rejected{background:#ff4d6d22;color:var(--danger);}
+
+.empty-state{text-align:center;color:var(--muted);padding:50px 0;font-size:14px;}
+.loader{text-align:center;padding:40px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>🔐 Admin Panel</h1>
+    <p>DekhoTaka Bot Management</p>
+    <input id="adminPass" type="password" placeholder="Admin Password">
+    <button onclick="adminLogin()">Login</button>
+    <div class="login-err" id="loginErr">❌ ভুল পাসওয়ার্ড</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="topbar">
+    <h1>DekhoTaka Admin</h1>
+    <button class="logout" onclick="adminLogout()">Logout</button>
+  </div>
+  <div class="wrap">
+    <div class="stats-row">
+      <div class="stat-card"><div class="num" id="s_totalUsers">0</div><div class="lbl">Total Users</div></div>
+      <div class="stat-card"><div class="num" id="s_pending">0</div><div class="lbl">Pending Requests</div></div>
+      <div class="stat-card"><div class="num" id="s_totalPaid">৳0</div><div class="lbl">Total Paid</div></div>
+      <div class="stat-card"><div class="num" id="s_totalBalance">৳0</div><div class="lbl">Total User Balance</div></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="filterReqs('pending', this)">⏳ Pending</div>
+      <div class="tab" onclick="filterReqs('approved', this)">✅ Approved</div>
+      <div class="tab" onclick="filterReqs('rejected', this)">❌ Rejected</div>
+      <div class="tab" onclick="filterReqs('all', this)">📋 All</div>
+    </div>
+
+    <div id="reqList"><div class="loader">Loading requests...</div></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA_Tm1_esvdURc2nnynYQN-0T0dmjwIdS4",
+  authDomain: "dekhotaka.firebaseapp.com",
+  databaseURL: "https://dekhotaka-default-rtdb.firebaseio.com",
+  projectId: "dekhotaka",
+  storageBucket: "dekhotaka.firebasestorage.app",
+  messagingSenderId: "1053477349698",
+  appId: "1:1053477349698:web:ec6d66dc7965e88ba340db"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ⚠️ এখানে আপনার নিজের admin password বদলে দিন
+const ADMIN_PASSWORD = "dekhotaka2026";
+
+let allRequests = [];
+let allUsers = {};
+let currentFilter = 'pending';
+
+function adminLogin(){
+  const pass = document.getElementById('adminPass').value;
+  if(pass === ADMIN_PASSWORD){
+    sessionStorage.setItem('dt_admin', 'true');
+    showDashboard();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+  }
+}
+function adminLogout(){
+  sessionStorage.removeItem('dt_admin');
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+function showDashboard(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  loadUsers();
+  loadRequests();
+}
+
+function loadUsers(){
+  db.ref('users').on('value', snap=>{
+    allUsers = snap.val() || {};
+    const userIds = Object.keys(allUsers);
+    document.getElementById('s_totalUsers').innerText = userIds.length;
+    let totalBal = 0;
+    userIds.forEach(uid=>{ totalBal += parseFloat(allUsers[uid].balance||0); });
+    document.getElementById('s_totalBalance').innerText = '৳'+totalBal.toFixed(2);
+  });
+}
+
+function loadRequests(){
+  db.ref('withdrawals').on('value', snap=>{
+    allRequests = [];
+    snap.forEach(child=>{ allRequests.push({id:child.key, ...child.val()}); });
+    allRequests.sort((a,b)=> new Date(b.requestedAt) - new Date(a.requestedAt));
+
+    const pending = allRequests.filter(r=>r.status==='pending');
+    const approved = allRequests.filter(r=>r.status==='approved');
+    document.getElementById('s_pending').innerText = pending.length;
+    document.getElementById('s_totalPaid').innerText = '৳'+approved.reduce((s,r)=>s+parseFloat(r.amount),0).toFixed(2);
+
+    renderRequests();
+  });
+}
+
+function filterReqs(status, el){
+  currentFilter = status;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderRequests();
+}
+
+function renderRequests(){
+  const list = document.getElementById('reqList');
+  let items = currentFilter==='all' ? allRequests : allRequests.filter(r=>r.status===currentFilter);
+
+  if(items.length===0){
+    list.innerHTML = '<div class="empty-state">কোনো request নেই</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(r=>`
+    <div class="req-card">
+      <div class="req-info">
+        <div class="req-name">${r.userName} ${r.username ? '(@'+r.username+')' : ''}</div>
+        <div class="req-detail">${r.method.toUpperCase()} • ${r.account} • ${new Date(r.requestedAt).toLocaleString('en-GB')}</div>
+        <div class="req-detail">User ID: ${r.userId}</div>
+      </div>
+      <div class="req-amt">৳${parseFloat(r.amount).toFixed(2)}</div>
+      ${r.status==='pending' ? `
+        <div class="req-actions">
+          <button class="act-btn act-approve" onclick="approveReq('${r.id}')">✅ Approve</button>
+          <button class="act-btn act-reject" onclick="rejectReq('${r.id}','${r.userId}','${r.amount}')">❌ Reject</button>
+        </div>
+      ` : `<span class="status-badge ${r.status}">${r.status==='approved'?'✅ Approved':'❌ Rejected'}</span>`}
+    </div>
+  `).join('');
+}
+
+function approveReq(id){
+  if(!confirm('এই request approve করতে চান? টাকা পাঠানো হয়ে গেছে বলে মার্ক হবে।')) return;
+  db.ref('withdrawals/'+id).update({status:'approved', processedAt:new Date().toISOString()});
+}
+
+function rejectReq(id, userId, amount){
+  if(!confirm('Reject করলে টাকা user এর balance এ ফেরত যাবে। নিশ্চিত?')) return;
+  db.ref('withdrawals/'+id).update({status:'rejected', processedAt:new Date().toISOString()});
+  // refund balance
+  db.ref('users/'+userId).once('value').then(snap=>{
+    if(snap.exists()){
+      const user = snap.val();
+      const newBal = parseFloat(user.balance||0) + parseFloat(amount);
+      db.ref('users/'+userId).update({balance:newBal});
+    }
+  });
+}
+
+// auto login if session exists
+if(sessionStorage.getItem('dt_admin')==='true'){ showDashboard(); }
+</script>
+</body>
+</html>
