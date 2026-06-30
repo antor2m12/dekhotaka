@@ -227,7 +227,7 @@ select.inp{cursor:pointer;}
     </div>
 
     <div class="section-title">Extra Tasks</div>
-    <div class="task-card">
+    <div class="task-card" id="joinTaskCard" style="display:none;">
       <div class="task-info"><div class="task-icon">📢</div><div><div class="task-name">Join Telegram Channel</div><div class="task-reward">+৳2.00 বোনাস</div></div></div>
       <button class="task-btn" id="joinTaskBtn" onclick="completeJoinTask()">Join</button>
     </div>
@@ -650,7 +650,7 @@ function loadHistory(){
 // ════════════════════════════════════════
 function copyRef(){
   const code = currentUserData.refCode;
-  const botUsername = "your_bot_username"; // ⚠️ এখানে আপনার বটের username দিন (without @)
+  const botUsername = "DekhoTakaBot";
   const link = `https://t.me/${botUsername}?start=${code}`;
   navigator.clipboard.writeText(link).then(()=>showToast('✅ রেফারেল লিংক কপি হয়েছে!')).catch(()=>showToast('কোড: '+code));
 }
