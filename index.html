@@ -266,6 +266,16 @@ select.inp{cursor:pointer;}
       <div class="profile-name" id="p_name">User</div>
       <div class="profile-phone" id="p_phone">-</div>
     </div>
+    <div class="ref-card" id="refInputCard">
+      <div class="section-title">রেফারেল কোড Enter করুন</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">বন্ধুর কোড দিন — দুজনেই ৳5 বোনাস পাবেন! (একবারই করা যাবে)</p>
+      <div style="display:flex;gap:8px;">
+        <input id="refInputBox" class="inp" style="margin:0;flex:1;" type="text" placeholder="যেমন: DT583955">
+        <button onclick="submitRefCode()" style="padding:12px 16px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--pink),var(--purple));color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;">Submit</button>
+      </div>
+      <div id="refInputMsg" style="font-size:12px;margin-top:8px;display:none;"></div>
+    </div>
+
     <div class="ref-card">
       <div class="section-title">Your Referral Code</div>
       <div class="ref-code-box" id="refCodeBox" onclick="copyRef()">LOADING</div>
@@ -320,7 +330,7 @@ const db = firebase.database();
 // ════════════════════════════════════════
 const DAILY_LIMIT = 30;
 const REWARD = 0.25;
-const MIN_WITHDRAW = 10;
+const MIN_WITHDRAW = 500;
 const MAX_WITHDRAW = 5000;
 const JOIN_BONUS = 5.00;
 const DAILY_BONUS = 5.00;
@@ -497,6 +507,12 @@ function showApp(){
   document.getElementById('refCodeBox').innerText = currentUserData.refCode;
   document.getElementById('p_joined').innerText = currentUserData.joined;
 
+  // hide referral input if already used
+  if(currentUserData.referredBy){
+    const card = document.getElementById('refInputCard');
+    if(card) card.style.display='none';
+  }
+
   updateUI();
   loadHistory();
 
@@ -666,8 +682,63 @@ function loadHistory(){
 }
 
 // ════════════════════════════════════════
-// COPY REFERRAL
+// MANUAL REFERRAL CODE SUBMIT
 // ════════════════════════════════════════
+function submitRefCode(){
+  const code = document.getElementById('refInputBox').value.trim().toUpperCase();
+  const msgEl = document.getElementById('refInputMsg');
+
+  if(!code){ 
+    msgEl.style.display='block'; msgEl.style.color='var(--danger)';
+    msgEl.innerText='❌ কোড লিখুন'; return; 
+  }
+  if(currentUserData.referredBy){ 
+    msgEl.style.display='block'; msgEl.style.color='var(--danger)';
+    msgEl.innerText='❌ আপনি আগেই একটা কোড ব্যবহার করেছেন'; return; 
+  }
+  if(code === currentUserData.refCode){ 
+    msgEl.style.display='block'; msgEl.style.color='var(--danger)';
+    msgEl.innerText='❌ নিজের কোড ব্যবহার করা যাবে না'; return; 
+  }
+
+  msgEl.style.display='block'; msgEl.style.color='var(--muted)';
+  msgEl.innerText='⏳ যাচাই করা হচ্ছে...';
+
+  // find referrer by refCode
+  db.ref('users').orderByChild('refCode').equalTo(code).once('value').then(snap=>{
+    if(!snap.exists()){
+      msgEl.style.color='var(--danger)';
+      msgEl.innerText='❌ কোডটি সঠিক নয়'; return;
+    }
+
+    const refData = snap.val();
+    const refUid = Object.keys(refData)[0];
+    const refUser = refData[refUid];
+
+    // give referrer bonus
+    db.ref('users/'+refUid).update({
+      balance: parseFloat(refUser.balance||0) + REFERRAL_BONUS,
+      refs: (refUser.refs||0) + 1
+    });
+
+    // give current user bonus
+    const newBalance = parseFloat(currentUserData.balance||0) + REFERRAL_BONUS;
+    db.ref('users/'+currentUserId).update({
+      balance: newBalance,
+      referredBy: code
+    }).then(()=>{
+      msgEl.style.color='var(--green)';
+      msgEl.innerText='✅ সফল! আপনি ৳'+REFERRAL_BONUS+' বোনাস পেয়েছেন!';
+      document.getElementById('refInputCard').style.display='none';
+      showToast('🎉 রেফারেল বোনাস ৳'+REFERRAL_BONUS+' যোগ হয়েছে!');
+    });
+  }).catch(err=>{
+    msgEl.style.color='var(--danger)';
+    msgEl.innerText='❌ Error: '+err.message;
+  });
+}
+
+
 function copyRef(){
   const code = currentUserData.refCode;
   const botUsername = "DekhoTakaBot";
